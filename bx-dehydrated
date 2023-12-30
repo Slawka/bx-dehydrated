@@ -1,0 +1,44 @@
+#!/bin/bash
+export LANG=en_US.UTF-8
+export NOLOCALE=yes
+export PATH=/sbin:/bin:/usr/sbin:/usr/bin
+
+OS_VERSION=$(cat /etc/redhat-release | \
+    sed -e "s/CentOS Linux release//;s/CentOS release // " | cut -d'.' -f1 | \
+    sed -e "s/\s\+//g")
+
+LOG=/home/bitrix/dehydrated_update.log
+CERT_DIR=/home/bitrix/dehydrated/certs
+
+HTTPS_ON=/home/bitrix/www/.htsecure
+HTTPS_OFF=/home/bitrix/www/.htsecure_tmp_off
+
+if [ -f $HTTPS_ON ]; then
+     # Check the rename filename exists or not
+     if [ $(mv -i $HTTPS_ON $HTTPS_OFF) ]; then
+        echo "Bitrix HTTPS temp disable"
+     fi
+fi
+
+# update certificates
+/home/bitrix/dehydrated/dehydrated -c > $LOG 2>&1
+
+# restart web service
+new_cnt=$(find $CERT_DIR/ -type f -mtime -1 | wc -l)
+if [[ $new_cnt -gt 0 ]]; then
+    if [[ $OS_VERSION -eq 7 ]]; then
+        systemctl reload nginx >> $LOG 2>&1
+    else
+        service nginx reload >> $LOG 2>&1
+    fi
+fi
+
+if [ -f $HTTPS_OFF ]; then
+     # Check the rename filename exists or not
+     if [ $(mv -i $HTTPS_OFF $HTTPS_ON) ]; then
+        echo "Bitrix HTTPS Enable"
+     fi
+fi
+
+# delete old certificates
+find $CERT_DIR/ -type f -mtime +120 -delete >>$LOG 2>&1
