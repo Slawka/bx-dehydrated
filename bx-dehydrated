@@ -16,7 +16,7 @@ HTTPS_OFF=/home/bitrix/www/.htsecure_tmp_off
 if [ -f $HTTPS_ON ]; then
      # Check the rename filename exists or not
      if [ $(mv -i $HTTPS_ON $HTTPS_OFF) ]; then
-        echo "Bitrix HTTPS temp disable"
+        echo "Bitrix HTTPS temp disable" >> $LOG 2>&1
      fi
 fi
 
@@ -36,7 +36,7 @@ fi
 if [ -f $HTTPS_OFF ]; then
      # Check the rename filename exists or not
      if [ $(mv -i $HTTPS_OFF $HTTPS_ON) ]; then
-        echo "Bitrix HTTPS Enable"
+        echo "Bitrix HTTPS Enable" >> $LOG 2>&1
      fi
 fi
 
